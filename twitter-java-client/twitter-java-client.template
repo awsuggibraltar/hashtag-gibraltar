@@ -1,0 +1,79 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "EC2 micro server for twitter-java-client",
+	"Parameters": {
+   		"InstanceTypeParam": {
+			"Description": "EC2 Instance Type (defaults to t2.micro)",
+      		"Type": "String",
+        	"Default": "t2.micro",
+         	"AllowedValues": ["t2.micro"]
+    	},
+     	"KeyPairName": {
+        	"Description": "Name of the EC2 key pair to enable the ssh access to the instance",
+         	"Type": "AWS::EC2::KeyPair::KeyName"
+      	},
+		"SSHLocation": {
+			"Description": "The IP address range that can used to access this instance",
+			"Type": "String",
+			"MinLength": 9,
+			"MaxLength": 18
+		},
+		"IamProfileName": {
+			"Description": "IAM Profile name",
+			"Type": "String"
+		}
+	},
+ 	"Resources": {
+   		"EC2TwitterJavaClient": {
+       		"Type": "AWS::EC2::Instance",         	
+         	"Properties": {
+            	"IamInstanceProfile": {
+					"Ref": "IamProfileName"
+				},
+             	"ImageId": "ami-70edb016",
+               	"InstanceType": {
+                	"Ref": "InstanceTypeParam"
+               	},
+				"SecurityGroups": [
+					{
+						"Ref": "InstanceSecurityGroup"
+					}
+				],
+                "KeyName": {
+                  	"Ref": "KeyPairName"
+                },
+                "Tags": [ 
+                	{	"Key": "Name",
+                   		"Value": "twitter-java-client"
+                   	}
+                ]
+          	}
+     	},
+		"InstanceSecurityGroup": {
+			"Type": "AWS::EC2::SecurityGroup",
+			"Properties": {
+				"GroupDescription" : "EC2 twitter-java-client SG",
+				"SecurityGroupIngress": [
+					{
+						"IpProtocol": "tcp",
+						"FromPort": "22",
+						"ToPort": "22",
+						"CidrIp": {
+							"Ref": "SSHLocation"
+						}
+					}
+				]
+			}
+		}
+	},
+ 	"Outputs" : {
+		"InstancePublicDNS" : {
+    		"Description": "Public DNS Address",  
+    		"Value" : { "Fn::GetAtt" : [ "EC2TwitterJavaClient", "PublicDnsName" ] }
+  		},
+		"InstanceId": {
+			"Description": "Instance Id",
+			"Value" : { "Ref" : "EC2TwitterJavaClient" }
+		}
+	}
+}
